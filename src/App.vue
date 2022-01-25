@@ -35,8 +35,9 @@
                 <div class="method-block-section-description">
                     Description
                 </div>
-                <section v-if="activeMethod.description" class="method-block-description">
-                    {{ activeMethod.description }}
+                <section v-html="activeMethod.description.replaceAll('\n', '<br>')"
+                         v-if="activeMethod.description"
+                         class="method-block-description">
                 </section>
 
                 <div class="method-block-section-description">
@@ -278,6 +279,8 @@ body {
         }
 
         .method-list-item--summary {
+            margin-top: .4rem;
+
             font-size: .9rem;
             font-weight: normal;
 
@@ -317,6 +320,9 @@ body {
     padding: .5rem 1rem;
 
     font-weight: 500;
+    font-family: Inconsolata, monospace;
+
+    color: darkslategray;
 
     border-bottom: 1px solid $border;
 }
@@ -344,6 +350,7 @@ body {
             padding: .5rem 1rem;
 
             font-weight: 500;
+            font-family: Inconsolata, monospace;
 
             border-right: 1px solid $border;
         }
@@ -352,6 +359,9 @@ body {
             padding: .5rem 1rem;
 
             font-weight: 500;
+            font-family: Inconsolata, monospace;
+
+            color: darkslategray;
 
             cursor: default;
 
