@@ -999,6 +999,11 @@ vscode-vue-languageservice@0.29.8:
     vscode-pug-languageservice "0.29.8"
     vscode-typescript-languageservice "0.29.8"
 
+vue-final-modal@^3.4.3:
+  version "3.4.3"
+  resolved "https://registry.yarnpkg.com/vue-final-modal/-/vue-final-modal-3.4.3.tgz#8fdf56da8a03cdf9e54bcaeb8293a93f88758915"
+  integrity sha512-sp6M09oXGcRM3d3Jr80UywWx4C9I18nH/549fgNrs8qbCcw+DJc8QSUFkJ91lqWndGQ1q5rYen4i4IIrpHPVYA==
+
 vue-tsc@^0.29.8:
   version "0.29.8"
   resolved "https://registry.yarnpkg.com/vue-tsc/-/vue-tsc-0.29.8.tgz#f4d8de5dd8756107c878489ccf9178d2d72fff47"
