@@ -1,7 +1,10 @@
-export interface ValidationDocument {
+export interface ValidatorDocument {
     name: string;
     description: string;
     class: string;
+    data: {
+        itemType?: TypeDocument;
+    };
 }
 
 export interface TypeDocument {
@@ -12,12 +15,26 @@ export interface TypeDocument {
     isFile: boolean;
     description: string | null;
     summary: string | null;
-    subtypes: TypeDocument[];
-    validations: ValidationDocument[];
+    unionTypes: TypeDocument[];
     params: ParamDocument[];
+    validators: ValidatorDocument[];
 }
 
 export interface ParamDocument {
     name: string;
     type: TypeDocument;
+    validators: ValidatorDocument[];
+}
+
+export interface SchemaDocument {
+    methods: MethodDocument[];
+    types: TypeDocument[];
+}
+
+export interface MethodDocument {
+    name: string;
+    description?: string;
+    resultType: TypeDocument;
+    summary?: string;
+    params: ParamDocument[];
 }

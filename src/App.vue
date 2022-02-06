@@ -1,93 +1,87 @@
 <template>
-  <div class="app" :class="{ invoke: invokeMode }">
-    <nav class="methods-list">
-      <header class="block-header block-header--bold">
-        Methods
-      </header>
+    <div class="app" :class="{ invoke: invokeMode }">
+        <nav class="methods-list">
+            <header class="block-header block-header--bold">
+                Methods
+            </header>
 
-      <a @click="activeMethod = method" class="methods-list-item" v-for="method in schema?.methods"
-         :key="method.name">
-        <div class="method-list-item--name">
-          {{ method.name }}
-        </div>
-        <div v-if="method.summary" class="method-list-item--summary">
-          {{ method.summary }}
-        </div>
-      </a>
-    </nav>
-    <section :key="activeMethod.name" class="method-block" v-if="activeMethod">
-      <header class="block-header with-button">
-        <button class="back">
-          ←
-        </button>
-        {{ activeMethod.name }}
+            <a @click="activeMethod = method" class="methods-list-item" v-for="method in schema?.methods"
+               :key="method.name">
+                <div class="method-list-item--name">
+                    {{ method.name }}
+                </div>
+                <div v-if="method.summary" class="method-list-item--summary">
+                    {{ method.summary }}
+                </div>
+            </a>
+        </nav>
+        <section :key="activeMethod.name" class="method-block" v-if="activeMethod">
+            <header class="block-header with-button">
+                <button class="back">
+                    ←
+                </button>
+                {{ activeMethod.name }}
 
-        <button v-if="invokeMode" @click="invokeMode = false" class="block-header-cancel-button">
-          cancel
-        </button>
+                <button v-if="invokeMode" @click="invokeMode = false" class="block-header-cancel-button">
+                    cancel
+                </button>
 
-        <button @click="onInvokeClick" class="block-header-invoke-button">
-          Invoke
-        </button>
-      </header>
+                <button @click="onInvokeClick" class="block-header-invoke-button">
+                    Invoke
+                </button>
+            </header>
 
-      <main class="method-block-details">
-        <div class="method-block-section-description">
-          Description
-        </div>
-        <section v-html="activeMethod.description.replaceAll('\n', '<br>')"
-                 v-if="activeMethod.description"
-                 class="method-block-description">
+            <main class="method-block-details">
+                <div class="method-block-section-description">
+                    Description
+                </div>
+                <section v-html="activeMethod.description.replaceAll('\n', '<br>')"
+                         v-if="activeMethod.description"
+                         class="method-block-description">
+                </section>
+
+                <div class="method-block-section-description">
+                    Params
+                </div>
+                <Params class="params--no-corner-borders"
+                        :path="activeMethod.name"
+                        :depth="0"
+                        :input="invokeMode"
+                        :params="activeMethod.params"/>
+
+                <div class="method-block-section-description">
+                    Result
+                </div>
+                <section v-if="activeMethod.resultType" class="method-block-result-type">
+                    <Type :type="activeMethod.resultType"/>
+                </section>
+            </main>
         </section>
-
-        <div class="method-block-section-description">
-          Params
-        </div>
-        <Params class="params--no-corner-borders"
-                :path="activeMethod.name"
-                :depth="0"
-                :input="invokeMode"
-                :params="activeMethod.params"/>
-
-        <div class="method-block-section-description">
-          Result
-        </div>
-        <section v-if="activeMethod.resultType" class="method-block-result-type">
-          <Type :type="activeMethod.resultType"/>
+        <section v-else class="method-block"></section>
+        <section class="result-block" :class="{ empty: true }">
+            Try to invoke
         </section>
-      </main>
-    </section>
-    <section v-else class="method-block"></section>
-    <section class="result-block" :class="{ empty: true }">
-      Try to invoke
-    </section>
-  </div>
+    </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import Type from './components/Type.vue';
 import Params from './components/Params.vue';
+import { MethodDocument } from './types';
+import { schema, setSchema } from './schema';
 
-interface SchemaDocument {
-  methods: MethodDocument[];
-}
-
-interface MethodDocument {
-}
-
-const schema = ref<SchemaDocument | null>(null);
 const activeMethod = ref<MethodDocument | null>(null);
 const invokeMode = ref(false);
 
 onMounted(() => {
-  fetch('http://localhost:8080/invoke/getSchema')
-      .then(r => r.json())
-      .then(data => schema.value = data.result);
+    fetch('http://localhost:8080/invoke/getSchema')
+        .then(r => r.json())
+        .then(data => setSchema(data.result));
 });
 
 function onInvokeClick() {
-  invokeMode.value = true;
+    invokeMode.value = true;
 }
 </script>
 
