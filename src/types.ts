@@ -13,16 +13,20 @@ export interface TypeDocument {
     isData: boolean;
     isBuiltin: boolean;
     isFile: boolean;
+    isEnum: boolean;
     description: string | null;
     summary: string | null;
     unionTypes: TypeDocument[];
     params: ParamDocument[];
     validators: ValidatorDocument[];
+    enumValues: number[] | string[];
 }
 
 export interface ParamDocument {
     name: string;
     type: TypeDocument;
+    isOptional: boolean;
+    defaultValue: any;
     validators: ValidatorDocument[];
 }
 

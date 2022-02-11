@@ -5,12 +5,13 @@
         <div class="td td--name" @click="hide">
             {{ param.name }}
 
-            <Type v-if="param.type.isData && input"
+            <Type v-if="(param.type.isData || param.type.isEnum) && input"
                   no-open
+                  :validators="param.validators"
                   :type="param.type"
             />
             <div class="td__arrow" :class="{ 'td__arrow--open': isOpen }"
-                 v-if="(param.type.isData || isArray || param.type.isUnion) && input">🢒
+                 v-if="(param.type.isData || isArray || param.type.isUnion || param.type.isEnum) && input">🢒
             </div>
         </div>
         <div class="td td--type" v-if="!input || isOpen">
@@ -21,6 +22,7 @@
                        :validators="param.validators"
             />
             <Type v-else
+                  :validators="param.validators"
                   :type="param.type"
             />
         </div>
@@ -49,7 +51,7 @@ const isArray = computed(() => param.value.type.name === 'array' || param.value.
 
 const trClasses = computed(() => {
     return [
-        param.value.type.isData ? 'tr--data' : undefined,
+        param.value.type.isData || param.value.type.isEnum ? 'tr--data' : undefined,
         param.value.type.isUnion ? 'tr--union' : undefined,
         isArray.value ? 'tr--array' : undefined,
         `tr--depth-${depth.value}`
@@ -57,7 +59,7 @@ const trClasses = computed(() => {
 });
 
 const hide = () => {
-    if (param.value.type.isData || isArray.value || param.value.type.isUnion) {
+    if (param.value.type.isData || isArray.value || param.value.type.isUnion || param.value.type.isEnum) {
         isOpen.value = !isOpen.value;
     }
 }

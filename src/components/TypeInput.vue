@@ -24,6 +24,19 @@
                    :validators="actualValidators"
                    :depth="depth"/>
     </div>
+    <div class="type-input-union type-input-enum" v-else-if="type.isEnum">
+        <div class="type-input-union__types">
+            <button class="type-input-union__type"
+                    :class="{ 'type-input-union--selected': enumValue === selectedEnumValue }"
+                    v-for="enumValue in type.enumValues"
+                    :key="enumValue"
+                    @click="selectedEnumValue = enumValue"
+            >
+                {{ enumValue }}
+                <span v-if="selectedEnumValue === enumValue">✅</span>
+            </button>
+        </div>
+    </div>
     <div class="type-input-array" v-else-if="isArray">
         <div class="type-input-array__items" v-if="arrayItemType">
             <div class="type-input-array__item"
@@ -79,12 +92,11 @@ const { type, path, depth, validators } = toRefs(props);
 
 const actualValidators = computed(() => {
     if (type.value.validators.length) {
-        console.log(type.value, type.value.validators, validators.value)
         return type.value.validators;
     }
 
     return validators.value;
-})
+});
 
 const update = ref(0);
 
@@ -143,6 +155,8 @@ const selectedType = computed({
         update.value++;
     }
 });
+
+const selectedEnumValue = ref(null);
 
 const arrayItemsCount = computed(() => {
     update.value;
@@ -286,9 +300,12 @@ const removeArrayItem = (index: number) => {
 
   padding: .1rem .5rem;
 
+  white-space: nowrap;
+
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: nowrap;
 
   border: none;
   border-bottom: 1px solid var(--borderColor);
@@ -302,6 +319,12 @@ const removeArrayItem = (index: number) => {
 
   &:not(:last-child) {
     border-right: 1px solid var(--borderColor);
+  }
+}
+
+.type-input-enum {
+  .type-input-union__type {
+    padding: .2rem .5rem;
   }
 }
 

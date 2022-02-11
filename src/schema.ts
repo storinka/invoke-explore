@@ -4,7 +4,14 @@ import { ParamDocument, SchemaDocument, TypeDocument } from './types';
 export const schema = ref<undefined | SchemaDocument>();
 
 // @ts-ignore
-const getType = (typeName: string, schema: SchemaDocument): TypeDocument => schema.types.find(type => type.name === typeName);
+const getType = (typeName: string, schema: SchemaDocument): TypeDocument => {
+    return schema.types.find(type => type.schemaTypeName === typeName);
+};
+
+// @ts-ignore
+export const getTypeByName = (typeName: string): TypeDocument => {
+    return schema.value.types.find(type => type.name === typeName);
+};
 
 export function setSchema(newSchema: SchemaDocument) {
     const resetType = (typeName: string | TypeDocument) => {

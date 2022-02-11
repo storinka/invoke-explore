@@ -158,6 +158,11 @@
     "@vue/compiler-dom" "3.2.27"
     "@vue/shared" "3.2.27"
 
+"@vue/devtools-api@^6.0.0-beta.18":
+  version "6.0.7"
+  resolved "https://registry.yarnpkg.com/@vue/devtools-api/-/devtools-api-6.0.7.tgz#a54b3b99b19ab71e96d40d005e9b1cec19eae5f1"
+  integrity sha512-i7vgWvkzP7n2L9yCH7hh+JZOYZYylrd6Pw4mwzZyk8CVYzy8Vm/Kl3bEmurgFg7n2kGV8pnm/qgegNIak8UomQ==
+
 "@vue/reactivity-transform@3.2.27":
   version "3.2.27"
   resolved "https://registry.yarnpkg.com/@vue/reactivity-transform/-/reactivity-transform-3.2.27.tgz#610b6df174cdceba6de1376f3218736c3b0e753d"
@@ -1003,6 +1008,18 @@ vue-final-modal@^3.4.3:
   version "3.4.3"
   resolved "https://registry.yarnpkg.com/vue-final-modal/-/vue-final-modal-3.4.3.tgz#8fdf56da8a03cdf9e54bcaeb8293a93f88758915"
   integrity sha512-sp6M09oXGcRM3d3Jr80UywWx4C9I18nH/549fgNrs8qbCcw+DJc8QSUFkJ91lqWndGQ1q5rYen4i4IIrpHPVYA==
+
+vue-json-pretty@^2.0.6:
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/vue-json-pretty/-/vue-json-pretty-2.0.6.tgz#7738c5c122ff84487f0bc7f8b6867597482e1863"
+  integrity sha512-aVdxw8ZRGR/Uj8GEaJ1/W2Ks/MdCfv5t2HRbbd+ICp3nL7msKRLN+1qOkSzaMvDygbDPxGhwUHBxZz8nxP+r3A==
+
+vue-router@4:
+  version "4.0.12"
+  resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-4.0.12.tgz#8dc792cddf5bb1abcc3908f9064136de7e13c460"
+  integrity sha512-CPXvfqe+mZLB1kBWssssTiWg4EQERyqJZes7USiqfW9B5N2x+nHlnsM1D3b5CaJ6qgCvMmYJnz+G0iWjNCvXrg==
+  dependencies:
+    "@vue/devtools-api" "^6.0.0-beta.18"
 
 vue-tsc@^0.29.8:
   version "0.29.8"

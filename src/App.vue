@@ -1,16 +1,20 @@
 <template>
-    <div class="app" :class="{ invoke: invokeMode }">
+    <div v-if="route.query.schemaUrl" class="app" :class="{ invoke: invokeMode, result: result && !isInvoking }">
         <nav class="methods-list">
             <header class="block-header block-header--bold">
                 Methods
             </header>
 
-            <a @click="activeMethod = method" class="methods-list-item" v-for="method in schema?.methods"
-               :key="method.name">
+            <a @click="activeMethod = method"
+               :class="{ 'methods-list-item--active': activeMethod === method }"
+               class="methods-list-item"
+               v-for="method in schema?.methods"
+               :key="method.name"
+            >
                 <div class="method-list-item--name">
                     {{ method.name }}
                 </div>
-                <div v-if="method.summary" class="method-list-item--summary">
+                <div v-if="method.summary" class="method-list-item__summary">
                     {{ method.summary }}
                 </div>
             </a>
@@ -26,13 +30,13 @@
                     cancel
                 </button>
 
-                <button @click="onInvokeClick" class="block-header-invoke-button">
+                <button :disabled="isInvoking" @click="onInvokeClick" class="block-header-invoke-button">
                     Invoke
                 </button>
             </header>
 
             <main class="method-block-details">
-                <div class="method-block-section-description">
+                <div class="method-block-section-description" v-if="activeMethod.description">
                     Description
                 </div>
                 <section v-html="activeMethod.description.replaceAll('\n', '<br>')"
@@ -44,488 +48,208 @@
                     Params
                 </div>
                 <Params class="params--no-corner-borders"
-                        :path="activeMethod.name"
+                        :path="rootPathForMethod(activeMethod)"
                         :depth="0"
                         :input="invokeMode"
                         :params="activeMethod.params"/>
 
-                <div class="method-block-section-description">
+                <div class="method-block-section-description" v-if="!invokeMode">
                     Result
                 </div>
-                <section v-if="activeMethod.resultType" class="method-block-result-type">
-                    <Type :type="activeMethod.resultType"/>
+                <section v-if="activeMethod.resultType && !invokeMode" class="method-block-result-type">
+                    <Type :type="activeMethod.resultType" :validators="[]"/>
                 </section>
             </main>
         </section>
         <section v-else class="method-block"></section>
         <section class="result-block" :class="{ empty: true }">
-            Try to invoke
+            <template v-if="isInvoking">
+                Invoking...
+            </template>
+            <div style="padding: 10px" v-else-if="invokeMode && result">
+                <div v-html="result" v-if="typeof result === 'string'"></div>
+                <vue-json-pretty :data="result" v-else/>
+            </div>
+            <template v-else-if="invokeMode">
+                Ready to invoke
+            </template>
+            <template v-else>
+                Try to invoke
+            </template>
         </section>
+    </div>
+    <div class="enter-url" v-else>
+        <form @submit.prevent="openSchemaFromInput" class="input-container">
+            <input placeholder="Schema url" type="text" v-model="schemaUrlInput">
+
+            <button v-if="schemaUrlInput" @click="openSchemaFromInput">
+                Open
+            </button>
+        </form>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+// eslint-disable
+import { computed, onMounted, ref, watch } from 'vue';
 import Type from './components/Type.vue';
 import Params from './components/Params.vue';
 import { MethodDocument } from './types';
-import { schema, setSchema } from './schema';
+import { getTypeByName, schema, setSchema } from './schema';
+import VueJsonPretty from 'vue-json-pretty';
+import 'vue-json-pretty/lib/styles.css';
+import { useRoute, useRouter } from 'vue-router';
 
-const activeMethod = ref<MethodDocument | null>(null);
+const route = useRoute();
+const router = useRouter();
+
 const invokeMode = ref(false);
+const isInvoking = ref(false);
+const result = ref(null);
+
+const schemaUrlInput = ref('');
+
+function openSchemaFromInput() {
+    router.push({
+        query: {
+            ...route.query,
+            schemaUrl: schemaUrlInput.value
+        }
+    });
+}
+
+const activeMethod = computed({
+    get(): MethodDocument | null {
+        return schema.value?.methods.find(m => m.name === route.query.method);
+    },
+    set(method: MethodDocument | null) {
+        if (method) {
+            router.replace({
+                query: {
+                    ...route.query,
+                    method: method.name
+                }
+            });
+        } else {
+            router.replace({
+                query: {
+                    ...route.query,
+                    method: null
+                }
+            })
+        }
+    }
+});
+
+function openSchemaFromUrl() {
+    if (route.query.schemaUrl) {
+        schema.value = undefined;
+        fetch(String(route.query.schemaUrl))
+            .then(r => r.json())
+            .then(data => setSchema(data.result))
+            .then(() => {
+                activeMethod.value = schema.value?.methods[0]
+            });
+    }
+}
 
 onMounted(() => {
-    fetch('http://localhost:8080/invoke/getSchema')
-        .then(r => r.json())
-        .then(data => setSchema(data.result));
+    openSchemaFromUrl();
+});
+
+watch(activeMethod, () => {
+    invokeMode.value = false;
+    result.value = null;
+});
+
+watch(() => route.query.schemaUrl, () => {
+    openSchemaFromUrl();
 });
 
 function onInvokeClick() {
-    invokeMode.value = true;
+    if (invokeMode.value) {
+        invoke();
+    } else {
+        invokeMode.value = true;
+    }
+}
+
+function extractValue(path, type, param) {
+    let selectedType = type.name;
+
+    console.log(`extracting ${path}`);
+
+    if (type.isUnion) {
+        const selectedTypeName = localStorage.getItem(`${path}[selectedType]`) || type.unionTypes[0].name;
+        type = getTypeByName(selectedTypeName);
+    }
+
+    if (type.name.startsWith("array")) {
+        const values = [];
+
+        let itemsCount: any = localStorage.getItem(`${path}:${type.name}[itemsCount]`);
+        itemsCount = itemsCount ? Number(itemsCount) : 0;
+
+        for (let i = 0; i < itemsCount; i++) {
+            const itemType = (type.validators.length ? type.validators : param.validators).find(v => v.name === "ArrayOf").data.itemType;
+
+            const value = extractValue(`${path}:${type.name}[${i}]`, itemType);
+
+            values.push(value);
+        }
+
+        return values;
+    }
+
+    if (type.isData) {
+        const params = {};
+
+        type.params.forEach(param => {
+            const value = extractValue(`${path}.${type.name}.${param.name}`, param.type, param);
+
+            params[param.name] = value;
+        });
+
+        return params;
+    }
+
+    return JSON.parse(localStorage.getItem(`${path}:${type.name}`));
+}
+
+const rootPathForMethod = method => `${route.query.schemaUrl}.${method.name}`;
+
+function invoke() {
+    const params = {};
+
+    if (activeMethod.value) {
+        activeMethod.value?.params.forEach(param => {
+            const value = extractValue(`${rootPathForMethod(activeMethod.value)}.${param.name}`, param.type, param);
+
+            params[param.name] = value;
+        });
+    }
+
+    isInvoking.value = true;
+
+    fetch(`http://localhost:8080/${activeMethod.value.name}`, {
+        method: "POST",
+        body: JSON.stringify(params),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(r => {
+            return r.clone().json().catch(() => r.text())
+        })
+        .then(data => {
+            result.value = typeof data === 'string' ? data : data.result || data;
+        })
+        .finally(() => {
+            isInvoking.value = false;
+        })
 }
 </script>
 
 <style lang="scss">
-@import "@storinka/dropdown/dist/styles/tooltip-light-theme.css";
-
-$button: #eee;
-
-:root {
-  --bgColor: white;
-  --borderColor: #ddd;
-  --mutedColor: #666;
-  --textColor: #111;
-  --hoverColor: rgba(#eee, .4);
-  --typeColor: darkslategray;
-  --tagColor: royalblue;
-}
-
-// dark
-//:root {
-//  --bgColor: #111;
-//  --borderColor: #222;
-//  --mutedColor: #666;
-//  --textColor: #999;
-//  --hoverColor: rgba(#eee, .4);
-//  --typeColor: lightslategray;
-//  --tagColor: darkslateblue;
-//}
-
-.vfm__container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.vfm__content {
-  width: 100%;
-  max-width: 800px;
-
-  padding: 24px;
-
-  background-color: var(--bgColor);
-  border-radius: 24px;
-}
-
-.modal__title {
-  margin: 0;
-
-  font-weight: 500;
-  font-family: Inconsolata, monospace;
-}
-
-.modal__header {
-  display: flex;
-  align-items: center;
-}
-
-.modal__close {
-  margin-left: auto;
-
-  font-size: 1.5rem;
-
-  background-color: var(--bgColor);
-  color: var(--textColor);
-  border: none;
-
-  cursor: pointer;
-
-  &:hover {
-    color: #333;
-  }
-}
-
-.modal__header + .modal__body {
-  margin-top: 12px;
-}
-
-.modal__tags + .modal__body {
-  margin-top: 24px;
-}
-
-.modal__tags {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.modal__tag {
-  padding: 4px 8px;
-
-  color: var(--bgColor);
-
-  font-weight: 500;
-  font-size: .8rem;
-
-  border-radius: 25px;
-  background-color: var(--tagColor);
-}
-
-.modal__tag + .modal__tag {
-  margin-left: 4px;
-}
-
-.modal__summary,
-.modal__description {
-  margin: 0;
-}
-
-.modal__summary {
-  font-weight: 500;
-  color: var(--mutedColor);
-}
-
-.modal__body > * {
-  margin-top: 12px;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  height: 100%;
-  min-height: 100%;
-
-  color: var(--textColor);
-  background-color: var(--bgColor);
-
-  font-family: Inter, sans-serif;
-}
-
-h1, h2, h3, h4, h5 {
-  color: var(--textColor);
-}
-
-input::placeholder {
-  font-family: Inter, sans-serif;
-}
-
-body {
-  height: 100%;
-
-  padding: 0;
-  margin: 0;
-
-  //font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
-
-#app {
-  height: 100%;
-}
-
-.app {
-  height: 100%;
-
-  display: grid;
-  grid-template-columns: .3fr .4fr .3fr;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.block-header {
-  height: 70px;
-  width: 100%;
-
-  padding: 0 1rem;
-
-  display: flex;
-  align-items: center;
-
-  font-size: 1.2rem;
-
-  border-bottom: 1px solid var(--borderColor);
-
-  &.with-button {
-    padding-right: 0;
-  }
-}
-
-.back {
-  display: none;
-
-  margin-right: 1rem;
-
-  border: none;
-  background: $button;
-
-  height: 40px;
-  width: 40px;
-
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
-
-  font-size: 1.2rem;
-
-  border-radius: 50%;
-}
-
-.block-header-invoke-button {
-  margin-left: auto;
-  height: 100%;
-
-  padding: 0 1rem;
-
-  cursor: pointer;
-
-  color: var(--textColor);
-  font-size: 1.2rem;
-
-  border: none;
-  background-color: var(--bgColor);
-
-  &:hover {
-    background-color: var(--bgColor);
-  }
-
-  &:active {
-    background-color: var(--bgColor);
-  }
-}
-
-.block-header-cancel-button {
-  margin-left: auto;
-
-  height: 100%;
-  padding: 0 1rem;
-  cursor: pointer;
-  font-size: 1.2rem;
-  border: none;
-
-  color: var(--textColor);
-  background-color: transparent;
-}
-
-.block-header--bold {
-  font-weight: bold;
-}
-
-.methods-list {
-  height: 100%;
-
-  padding: 0;
-  margin: 0;
-
-  list-style: none;
-
-  border-right: 1px solid var(--borderColor);
-
-  .methods-list-item {
-    padding: 1rem;
-
-    display: flex;
-    flex-direction: column;
-
-    font-size: 1.1rem;
-    font-weight: 500;
-
-    border-bottom: 1px solid var(--borderColor);
-
-    text-decoration: none;
-
-    color: var(--textColor);
-
-    .methods-list-item--name {
-    }
-
-    .method-list-item--summary {
-      margin-top: .4rem;
-
-      font-size: .9rem;
-      font-weight: normal;
-
-      color: var(--mutedColor);
-    }
-
-    &:hover {
-      background-color: var(--hoverColor);
-      cursor: pointer;
-    }
-  }
-}
-
-.method-block {
-  border-right: 1px solid var(--borderColor);
-}
-
-.method-block-details {
-}
-
-.method-block-description {
-  padding: .5rem 1rem;
-
-  border-bottom: 1px solid var(--borderColor);
-}
-
-.method-block-section-description {
-  padding: .5rem 1rem;
-
-  font-size: .8rem;
-  color: var(--mutedColor);
-
-  border-bottom: 1px solid var(--borderColor);
-}
-
-.method-block-result-type {
-  padding: .5rem 1rem;
-
-  font-weight: 500;
-  font-family: Inconsolata, monospace;
-
-  color: var(--typeColor);
-
-  border-bottom: 1px solid var(--borderColor);
-}
-
-.method-block-params {
-  .method-block-param {
-    display: grid;
-    grid-template-columns: .5fr .5fr;
-
-    border-bottom: 1px solid var(--borderColor);
-
-    &.method-block-param--data-input {
-      display: flex;
-      flex-direction: column;
-    }
-
-    & > .method-block-params {
-      grid-row: 2;
-      grid-column: 1/3;
-
-      border-top: 1px solid var(--hoverColor);
-      border-bottom: 1px solid var(--hoverColor);
-
-      .method-block-param {
-        border-bottom: 1px solid var(--hoverColor);
-      }
-    }
-
-    .method-block-param__name {
-      padding: .5rem 1rem;
-
-      font-weight: 500;
-      font-family: Inconsolata, monospace;
-
-      border-right: 1px solid var(--borderColor);
-    }
-
-    .method-block-param__type {
-      padding: .5rem 1rem;
-
-      font-weight: 500;
-      font-family: Inconsolata, monospace;
-
-      &.type-input {
-        padding: 0;
-
-        width: 100%;
-        height: 100%;
-      }
-
-      input {
-        width: 100%;
-        height: 100%;
-
-        font-weight: 500;
-        font-family: Inconsolata, monospace;
-        font-size: 1rem;
-
-        padding: .5rem 1rem;
-        border: none;
-
-        &::placeholder {
-          font-weight: 500;
-          font-family: Inconsolata, monospace;
-        }
-      }
-    }
-  }
-}
-
-.s-dropdown.s-dropdown-tooltip-light-theme {
-  background-color: white;
-
-  padding: 0;
-  border-radius: 0;
-
-  box-shadow: 2px 2px 10px 0 #eee;
-}
-
-.result-block {
-  &.empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 900px) {
-  .back {
-    display: flex;
-  }
-
-  .method-block {
-    display: none !important;
-  }
-
-  .result-block {
-    display: none !important;
-  }
-}
-
-.invoke {
-  @media (max-width: 900px) {
-    .methods-list {
-      display: none !important;
-    }
-  }
-
-  .method-block {
-    display: revert !important;
-
-    .block-header-invoke-button {
-      background-color: var(--textColor);
-      color: white;
-
-      margin-left: revert;
-
-      //&:hover {
-      //  background-color: lighten(var(--textColor), 8);
-      //}
-      //
-      //&:active {
-      //  background-color: darken(var(--textColor), 2);
-      //}
-    }
-  }
-
-  .result-block {
-    display: revert !important;
-  }
-}
+@import "./assets/styles";
 </style>

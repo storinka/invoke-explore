@@ -1,13 +1,19 @@
 <template>
-    <div @click="type.isUnion ? undefined : openModal()"
+    <div @click="type.isUnion || isArrayWithType ? undefined : openModal()"
          class="type"
-         :class="{ 'type--union': type.isUnion, 'type--no-open': noOpen }"
+         :class="{ 'type--union': type.isUnion, 'type--no-open': noOpen, 'type--array': isArrayWithType }"
     >
         <template v-if="type.isUnion">
             <template v-for="(subtype, i) in type.unionTypes" :key="subtype.name">
-                <Type :type="subtype"/>
+                <Type :validators="actualValidators" :type="subtype"/>
                 <span class="type__divider" v-if="i !== type.unionTypes.length - 1">|</span>
             </template>
+        </template>
+        <template v-else-if="isArrayWithType">
+            <span>array</span>
+            <span>{{ "<" }}</span>
+            <Type :validators="[]" :type="arrayItemType"/>
+            <span>{{ ">" }}</span>
         </template>
         <template v-else>
             {{ type.name }}
@@ -30,6 +36,7 @@
                     <div class="modal__tag" v-if="type.isData">Data</div>
                     <div class="modal__tag" v-if="type.isUnion">Union</div>
                     <div class="modal__tag" v-if="type.isFile">File</div>
+                    <div class="modal__tag" v-if="type.isEnum">Enum</div>
                 </div>
 
                 <p class="modal__summary" v-if="type.summary" v-html="type.summary"></p>
@@ -45,24 +52,44 @@
 import { computed, defineProps, ref, toRefs } from 'vue';
 import Modal from './Modal.vue';
 import Params from './Params.vue';
-import { TypeDocument } from '../types';
+import { TypeDocument, ValidatorDocument } from '../types';
 
 interface Props {
     type: TypeDocument;
     noOpen?: boolean;
+    validators: ValidatorDocument[];
 }
 
 const props = defineProps<Props>();
-const { type, noOpen } = toRefs(props);
+const { type, noOpen, validators } = toRefs(props);
 
 const modal = ref(false);
 
 const openModal = () => modal.value = true;
 const closeModal = () => modal.value = false;
+
+const isArray = computed(() => type.value.name === 'array' || type.value.name.startsWith('array<'));
+const isArrayWithType = computed(() => type.value.name.startsWith('array<') || actualValidators.value.find(v => v.name === "ArrayOf"));
+
+const actualValidators = computed(() => {
+    if (type.value.validators.length) {
+        return type.value.validators;
+    }
+
+    return validators.value;
+})
+
+const arrayItemType = computed(() => {
+    return actualValidators.value.find(v => v.name === "ArrayOf")?.data.itemType;
+});
+
 </script>
 
 <style lang="scss">
 .type {
+  display: flex;
+  flex-wrap: nowrap;
+
   font-weight: 500;
   font-family: Inconsolata, monospace;
 
@@ -75,10 +102,7 @@ const closeModal = () => modal.value = false;
   }
 }
 
-.type--union {
-  display: flex;
-  flex-wrap: nowrap;
-
+.type--union, .type--array {
   cursor: default;
 
   &:hover {

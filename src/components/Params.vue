@@ -256,4 +256,14 @@ $borderRadius: 6px;
     }
   }
 }
+
+.td--type {
+  overflow: auto;
+
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 </style>
