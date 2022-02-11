@@ -11,7 +11,7 @@ app.use(SDropdown)
 app.use(vfmPlugin)
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory('/invoke-explore'),
     routes: [
         {
             path: '',
