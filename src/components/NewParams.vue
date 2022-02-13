@@ -45,6 +45,30 @@ export default defineComponent({
 
 .params--nested {
   border-left: 4px solid var(--borderColor);
+
+  > .param:first-child {
+    > .param__name {
+      box-shadow: inset 0px 11px 8px -10px rgba(#333, .1);
+    }
+
+    &:not(.param--complex-mode) {
+      > .param__type {
+        box-shadow: inset 0px 11px 8px -10px rgba(#333, .1);
+      }
+    }
+  }
+
+  //> .param:last-child {
+  //  > .param__name {
+  //    box-shadow: inset 0px -11px 8px -10px rgba(#333, .1);
+  //  }
+  //
+  //  &:not(.param--complex-mode) {
+  //    > .param__type {
+  //      box-shadow: inset 0px -11px 8px -10px rgba(#333, .1);
+  //    }
+  //  }
+  //}
 }
 
 .params--border {

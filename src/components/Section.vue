@@ -8,12 +8,14 @@
             </span>
         </div>
 
-        <div class="api-document-section__items" ref="items" :style="{ maxHeight: `${maxHeight}px` }">
-            <SectionItem @click="activeItem = item"
-                         :active="activeItem === item"
-                         :item="item"
-                         :key="item.name"
-                         v-for="item in section.items"
+        <div class="api-document-section__items" ref="items" :style="{ maxHeight: `${maxHeight}px` }"
+             v-if="SectionItem">
+            <component :is="SectionItem"
+                       @click="activeItem = item"
+                       :active="activeItem?.['@type'] === item['@type'] && activeItem?.name === item.name"
+                       :item="item"
+                       :key="item.name"
+                       v-for="item in mappedItems"
             />
         </div>
     </div>
@@ -23,10 +25,10 @@
 import { defineComponent } from 'vue';
 import SectionItem from './SectionItem.vue';
 import { MethodDocument, SectionDocument, TypeDocument } from '../types';
+import { apiDocument } from '../apiDocument';
 
 export default defineComponent({
     name: "Section",
-    components: { SectionItem },
     props: {
         section: Object as () => SectionDocument,
         modelValue: Object,
@@ -39,6 +41,9 @@ export default defineComponent({
         };
     },
     computed: {
+        SectionItem() {
+            return SectionItem;
+        },
         activeItem: {
             get(): MethodDocument | TypeDocument {
                 return this.modelValue;
@@ -47,6 +52,19 @@ export default defineComponent({
                 this.$emit("update:modelValue", activeItem);
             },
         },
+        mappedItems() {
+            return this.section?.items.map(item => {
+                if (item['@type'] === 'MethodReferenceDocument') {
+                    return apiDocument.value?.availableMethods.find((method) => method.name === item.methodName);
+                }
+
+                if (item['@type'] === 'TypeReferenceDocument') {
+                    return apiDocument.value?.availableTypes.find((type) => type.uniqueTypeName === item.uniqueTypeName);
+                }
+
+                return item;
+            });
+        }
     },
     mounted() {
         this.resetHeight();

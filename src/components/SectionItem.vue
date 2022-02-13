@@ -1,12 +1,17 @@
 <template>
+    <component :is="Section"
+               :section="actualItem"
+               v-if="Section && actualItem['@type'] === 'SectionDocument'"
+    />
     <div class="api-document-section-item"
+         v-else
          :class="{ 'api-document-section-item--active': active }"
     >
         <div class="api-document-section-item__name">
-            {{ item.name }}
+            {{ actualItem.name }}
         </div>
-        <div class="api-document-section-item__summary" v-if="item.summary">
-            {{ item.summary }}
+        <div class="api-document-section-item__summary" v-if="actualItem.summary">
+            {{ actualItem.summary }}
         </div>
 
         <div class="api-document-section-item__type">
@@ -17,20 +22,39 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { MethodDocument, TypeDocument } from '../types';
+import {
+    IframeDocument,
+    MarkdownDocument,
+    MethodDocument,
+    MethodReferenceDocument,
+    SectionDocument,
+    TypeDocument
+} from '../types';
+import Section from './Section.vue';
+import { apiDocument } from '../apiDocument';
 
 export default defineComponent({
     name: "SectionItem",
     props: {
         item: {
-            type: Object as () => TypeDocument | MethodDocument,
+            type: Object as () => TypeDocument | MethodDocument | SectionDocument | IframeDocument | MarkdownDocument | MethodReferenceDocument,
             required: true,
         },
         active: Boolean,
     },
     computed: {
+        Section() {
+            return Section;
+        },
+        actualItem() {
+            if (this.item['@type'] === 'MethodReferenceDocument') {
+                return apiDocument.value?.availableMethods.find((method) => method.name === this.item.methodName);
+            }
+
+            return this.item;
+        },
         type() {
-            return this.item["@type"].substring(0, this.item["@type"].length - "Document".length);
+            return this.actualItem["@type"].substring(0, this.actualItem["@type"].length - "Document".length);
         },
     },
 });

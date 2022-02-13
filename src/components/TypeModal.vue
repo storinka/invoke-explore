@@ -46,6 +46,11 @@ export default defineComponent({
             required: true,
         },
     },
+    data() {
+        return {
+            isOpen: true,
+        };
+    },
     computed: {
         NewParams() {
             return NewParams;
@@ -53,11 +58,6 @@ export default defineComponent({
         Modal() {
             return Modal;
         },
-    },
-    data() {
-        return {
-            isOpen: true,
-        };
     },
 });
 </script>

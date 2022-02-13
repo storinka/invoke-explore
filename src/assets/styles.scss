@@ -179,7 +179,7 @@ body {
   transform: rotate(-90deg);
 }
 
-.header {
+.app-header {
   position: sticky;
   z-index: 2;
 
@@ -201,7 +201,7 @@ body {
   border-bottom: 1px solid var(--borderColor);
 }
 
-.header__icon {
+.app-header__icon {
   height: 1.4em;
 
   img {
@@ -212,6 +212,40 @@ body {
   }
 }
 
-.header--with-button {
+.app-header__settings-button {
+  all: unset;
+
+  margin-left: auto;
+
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: var(--mutedColor);
+
+  line-height: 1;
+  font-size: 1.4rem;
+
+  cursor: pointer;
+
+  transition: all 125ms ease-in-out;
+
+  &:hover {
+    background-color: var(--hoverColor);
+
+    transform: rotate(30deg);
+  }
+
+  &:active {
+    background-color: var(--activeColor);
+  }
+}
+
+.app-header--with-button {
   padding-right: 0;
 }

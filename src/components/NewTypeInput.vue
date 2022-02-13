@@ -1,11 +1,13 @@
 <template>
     <component :is="NewParams"
                :params="type.params"
-               class="params--nested"
+               class="type-input-mh params--nested"
+               ref="heightEl"
                :path="path"
+               :style="style"
                v-if="NewParams && type.isData"
                input-mode/>
-    <div class="type-input-union" v-else-if="type.isUnion">
+    <div ref="heightEl" class="type-input-mh type-input-union" :style="style" v-else-if="type.isUnion">
         <div class="type-input-union__types">
             <button class="type-input-union__type"
                     :class="{ 'type-input-union--selected': unionType === selectedType }"
@@ -24,7 +26,7 @@
                       :key="selectedType.name"
         />
     </div>
-    <div class="type-input-union type-input-enum" v-else-if="type.isEnum">
+    <div ref="heightEl" class="type-input-mh type-input-union type-input-enum" :style="style" v-else-if="type.isEnum">
         <div class="type-input-union__types">
             <button class="type-input-union__type"
                     :class="{ 'type-input-union--selected': enumValue === selectedEnumValue }"
@@ -37,19 +39,22 @@
             </button>
         </div>
     </div>
-    <div class="type-input-array" v-else-if="type.isArray">
+    <div ref="heightEl" class="type-input-mh type-input-array" :style="style" v-else-if="type.isArray">
         <div class="type-input-array__items" v-if="arrayItemType">
             <div class="type-input-array__item"
                  v-for="(_, i) in new Array(arrayItemsCount).fill(null)"
                  :key="`${i}-${arrayItemsCount}`">
                 <div class="type-input-array__item-index">{{ i }}</div>
 
-                <NewTypeInput :path="`${path}:${type.name}[${i}]`"
-                              :type="arrayItemType"
-                              :param="param"
-                />
+                <div style="display: flex; align-items: center; width: 100%;">
+                    <NewTypeInput :path="`${path}:${type.name}[${i}]`"
+                                  :type="arrayItemType"
+                                  :param="param"
+                                  style="width: 100%;"
+                    />
 
-                <button @click="removeArrayItem(i)" class="type-input-array__item-remove">×</button>
+                    <button @click="removeArrayItem(i)" class="type-input-array__item-remove">×</button>
+                </div>
             </div>
         </div>
         <button class="type-input-array__add-button" @click="addArrayItem">+</button>
@@ -88,14 +93,23 @@ export default defineComponent({
         },
         param: Object as () => ParamDocument,
         path: String,
+        isOpen: Boolean,
     },
     data() {
         return {
             selectedEnumValue: null,
             update: 0,
+            maxHeight: 0,
         };
     },
+    mounted() {
+        this.resetHeight();
+    },
     computed: {
+        style() {
+            // return { maxHeight: `${this.maxHeight}px` };
+            return {};
+        },
         NewParams() {
             return NewParams;
         },
@@ -196,6 +210,10 @@ export default defineComponent({
             this.update++;
         },
         removeArrayItem(index: number) {
+            // if (!window.confirm(`Sure want to delete item #${index}?`)) {
+            //     return;
+            // }
+
             const size = this.arrayItemsCount;
 
             const items = { ...localStorage };
@@ -226,6 +244,25 @@ export default defineComponent({
 
             this.update++;
         },
+        resetHeight() {
+            if (this.isOpen) {
+                if (this.$refs.heightEl instanceof HTMLElement) {
+                    this.maxHeight = this.$refs.heightEl.scrollHeight;
+                } else if (this.$refs.heightEl) {
+                    this.maxHeight = this.$refs.heightEl.$el.scrollHeight;
+                }
+            } else {
+                this.maxHeight = 0;
+            }
+        },
+    },
+    watch: {
+        "isOpen"() {
+            this.resetHeight();
+        },
+        "update"() {
+            this.resetHeight();
+        },
     },
 });
 </script>
@@ -253,7 +290,6 @@ export default defineComponent({
     background-color: transparent;
 
     color: green;
-    box-shadow: inset 0 0 0 1px green;
 
     transition: all 125ms ease;
 
@@ -382,24 +418,10 @@ export default defineComponent({
 .type-input-array__item {
   width: 100%;
 
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 20px auto;
 
   border-bottom: 1px solid var(--borderColor);
-
-  .type-input-array__item-remove {
-    all: unset;
-
-    width: 20px;
-    height: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background-color: red;
-    color: white;
-  }
 
   .type-input-array__item-index {
     width: 20px;
@@ -407,6 +429,8 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
+
+    border-right: 1px solid var(--borderColor);
   }
 
   > .type-input-union {
@@ -417,6 +441,34 @@ export default defineComponent({
   > .type-input-union {
     border-left: 1px solid var(--borderColor);
     border-right: 1px solid var(--borderColor);
+  }
+}
+
+.type-input-array__item-remove {
+  all: unset;
+
+  width: 20px;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: orangered;
+  color: white;
+
+  border-left: 1px solid var(--borderColor);
+
+  transition: all 125ms ease-in-out;
+
+  cursor: pointer;
+
+  &:hover {
+    background-color: lighten(orangered, 5);
+  }
+
+  &:active {
+    background-color: darken(orangered, 5);
   }
 }
 
@@ -436,5 +488,11 @@ export default defineComponent({
   &:hover {
     background-color: var(--borderColor);
   }
+}
+
+.type-input-mh {
+  overflow: hidden;
+
+  transition: max-height 250ms ease-in-out;
 }
 </style>

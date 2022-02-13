@@ -1,12 +1,16 @@
 <template>
     <div class="api-document" :class="{ 'app-document--three-cols': isMethodActive }" v-if="apiDocument">
         <div class="api-document__sections">
-            <div class="header">
-                <div class="header__icon" v-if="apiDocument.iconUrl">
+            <div class="app-header">
+                <div class="app-header__icon" v-if="apiDocument.iconUrl">
                     <img src="https://business.storinka.menu/_nuxt/img/logo.b45e76c.svg" alt="Icon">
                 </div>
 
                 {{ apiDocument.name }}
+
+                <button @click="openSettings" class="app-header__settings-button">
+                    ⚙
+                </button>
             </div>
 
             <div class="api-document__sections-list">
@@ -23,7 +27,7 @@
             <div class="api-document-section-content api-document-section-content--with-header"
                  v-if="isTypeActive || isMethodActive"
             >
-                <div class="header header--with-button">
+                <div class="app-header app-header--with-button">
                     {{ activeItem.name }}
                     <span style="margin-left: .5ch; color: #0d6efd; font-size: .6em;">
                         {{ isMethodActive ? 'METHOD' : 'TYPE' }}
@@ -55,6 +59,31 @@
                         </div>
                         <TypeName class="api-document-section-block__body"
                                   :type="activeItem.resultType"
+                        />
+                    </div>
+                    <div class="api-document-section-block" v-if="activeItem.headers?.length || isInputMode">
+                        <div class="api-document-section-block__name">
+                            Headers
+                        </div>
+                        <Headers class="api-document-section-block__params"
+                                 :path="activeItem.name"
+                                 :headers="activeItem.headers"
+                                 :input-mode="isInputMode"
+                                 v-if="isInputMode"
+                        />
+                        <div class="api-document-section-block__body" v-else>
+                            {{ activeItem.headers.map(h => h.name).join(", ") }}
+                        </div>
+                    </div>
+                    <div class="api-document-section-block" v-if="isInputMode">
+                        <div class="api-document-section-block__name">
+                            Global Headers
+                        </div>
+                        <Headers class="api-document-section-block__params"
+                                 :path="apiDocument.name"
+                                 :headers="activeItem.headers"
+                                 :input-mode="isInputMode"
+                                 glob
                         />
                     </div>
                 </div>
@@ -100,6 +129,7 @@ import {
     invokeResult,
     invokingUploadProgress,
     isInvoking,
+    mitter,
     setRawApiDocument
 } from './apiDocument';
 import SectionItem from './components/SectionItem.vue';
@@ -110,10 +140,14 @@ import InvokeButton from './components/InvokeButton.vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import VueJsonPretty from 'vue-json-pretty';
+import Headers from './components/Headers.vue';
+import SettingsModal from './components/SettingsModal.vue';
+
+const API_DOCUMENT_URL = "http://localhost:8081/getApiDocument";
 
 export default defineComponent({
     name: "ApiDocument",
-    components: { InvokeButton, Section, NewParams, TypeName, SectionItem, VueJsonPretty },
+    components: { Headers, InvokeButton, Section, NewParams, TypeName, SectionItem, VueJsonPretty },
     computed: {
         apiDocument() {
             return apiDocument.value;
@@ -146,10 +180,18 @@ export default defineComponent({
         },
         activeItem: {
             get() {
+                if (activeDocument.value?.['@type'] === 'MethodReferenceDocument') {
+                    return apiDocument.value?.availableMethods.find((method) => method.name === activeDocument.value.methodName);
+                }
+
                 return activeDocument.value;
             },
             set(item) {
-                activeDocument.value = item;
+                if (item && item["@type"] === "MethodReferenceDocument") {
+                    activeDocument.value = apiDocument.value?.availableMethods.find((method) => method.name === item.methodName);
+                } else {
+                    activeDocument.value = item;
+                }
             },
         },
         uploadProgress() {
@@ -157,12 +199,20 @@ export default defineComponent({
         },
     },
     mounted() {
-        fetch("http://localhost:8081/getApiDocument")
+        fetch(API_DOCUMENT_URL)
             .then(r => r.json())
             .then(data => setRawApiDocument(data.result))
             .then(() => {
                 this.activeItem = this.apiDocument?.sections[0]?.items[0];
             });
+    },
+    methods: {
+        openSettings() {
+            mitter.emit("modal:open", {
+                component: SettingsModal,
+                props: {},
+            });
+        },
     },
 });
 </script>
@@ -268,6 +318,7 @@ html, body {
 .api-document-section__body {
   overflow: auto;
 
+  height: 100%;
   max-height: 100%;
 }
 
@@ -287,6 +338,8 @@ html, body {
   width: 100%;
 
   padding: .5rem 1rem;
+
+  font-family: Inconsolata, monospace;
 
   border-bottom: 1px solid var(--borderColor);
 }

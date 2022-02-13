@@ -78,6 +78,7 @@ const makeInvokeFn = () => {
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
+                ...(options?.headers || {})
             },
             onUploadProgress: options?.onUploadProgress as any,
             onDownloadProgress: options?.onDownloadProgress as any,
@@ -116,9 +117,47 @@ export default defineComponent({
 
             const params = {};
 
+            const rootPath = rootPathForMethod(activeDocument.value);
+
             if (activeDocument.value) {
                 activeDocument.value.params.forEach(param => {
                     params[param.name] = extractValue(`${rootPathForMethod(activeDocument.value)}.${param.name}`, param.type, param);
+                });
+            }
+
+            const headers = {};
+
+            if (activeDocument.value) {
+                const ls = { ...localStorage };
+
+                Object.entries(ls).forEach(([lk, lv]) => {
+                    if (lk.startsWith(`${apiDocument.value.name}_global_headers.`) && lk.endsWith(".[name]")) {
+                        const header = lk.substring(`${apiDocument.value.name}_global_headers.`.length);
+                        const index = header.split('.')[0];
+
+                        Object.entries(ls).forEach(([k, v]) => {
+                            if (k === `${apiDocument.value.name}_global_headers.${index}.[value]`) {
+                                headers[lv] = v;
+                            }
+                        });
+                    }
+                });
+
+                activeDocument.value.headers.forEach(header => {
+                    headers[header.name] = localStorage.getItem(`${rootPathForMethod(activeDocument.value)}_headers.${header.name}`);
+                });
+
+                Object.entries(ls).forEach(([lk, lv]) => {
+                    if (lk.startsWith(`${activeDocument.value.name}_additional_headers.`) && lk.endsWith(".[name]")) {
+                        const header = lk.substring(`${activeDocument.value.name}_additional_headers.`.length);
+                        const index = header.split('.')[0];
+
+                        Object.entries(ls).forEach(([k, v]) => {
+                            if (k === `${activeDocument.value.name}_additional_headers.${index}.[value]`) {
+                                headers[lv] = v;
+                            }
+                        });
+                    }
                 });
             }
 
@@ -140,8 +179,15 @@ export default defineComponent({
                         percentage,
                     };
                 },
+                headers,
             }).then(result => invokeResult.value = result)
-                .catch(error => invokeResult.value = error)
+                .catch(error => {
+                    if (error.response) {
+                        invokeResult.value = error.response.data
+                    } else {
+                        invokeResult.value = error
+                    }
+                })
                 .finally(() => {
                     isInvoking.value = false;
                 });

@@ -9,6 +9,7 @@
     "deploy": "node scripts/gh-pages-deploy.js"
   },
   "dependencies": {
+    "@koas/v-hscroll": "^1.0.2",
     "@storinka/dropdown": "^2.0.2",
     "@types/dompurify": "^2.3.3",
     "@types/marked": "^4.0.2",

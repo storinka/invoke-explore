@@ -19,6 +19,7 @@
                        class="param__type"
                        :type="param.type"
                        :param="param"
+                       :is-open="isOpen"
                        :path="`${path}.${param.name}`"
             />
             <component :is="TypeName"
@@ -126,7 +127,7 @@ export default defineComponent({
   border-right: 1px solid var(--borderColor);
 }
 
-.param__type {
+.param__type.type-name {
   overflow: auto;
 
   scrollbar-width: none;

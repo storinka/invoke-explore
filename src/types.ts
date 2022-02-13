@@ -9,6 +9,7 @@ export interface RawMethodDocument {
     resultType?: string;
     params: RawParamDocument[];
     tags: string[];
+    headers: RawHeaderDocument[];
 }
 
 export interface RawParamDocument {
@@ -70,7 +71,7 @@ export interface RawSectionDocument {
     "@type": "SectionDocument";
 
     name: string;
-    items: Array<RawTypeDocument | RawMethodDocument | RawSectionDocument | RawIframeDocument | RawMarkdownDocument>
+    items: Array<RawTypeDocument | RawMethodDocument | RawSectionDocument | RawIframeDocument | RawMarkdownDocument | RawMethodReferenceDocument>
 }
 
 export interface RawInvokeInstructionDocument {
@@ -84,6 +85,12 @@ export interface RawInvokeInstructionDocument {
     type: string;
 }
 
+export interface RawHeaderDocument {
+    "@type": "HeaderDocument";
+
+    name: string;
+}
+
 export interface RawApiDocument {
     "@type": "ApiDocument";
 
@@ -94,6 +101,13 @@ export interface RawApiDocument {
     sections: RawSectionDocument[];
     invokeInstruction: RawInvokeInstructionDocument;
     availableTypes: RawTypeDocument[];
+    availableMethods: RawMethodDocument[];
+}
+
+export interface RawMethodReferenceDocument {
+    "@type": "MethodReferenceDocument";
+
+    methodName: string;
 }
 
 // transformed
@@ -101,6 +115,7 @@ export interface RawApiDocument {
 export type MethodDocument = Omit<RawMethodDocument, "resultType" | "params"> & {
     resultType?: TypeDocument;
     params: ParamDocument[];
+    headers: HeaderDocument[];
 }
 
 export type ParamDocument = Omit<RawParamDocument, "type" | "validators"> & {
@@ -121,14 +136,20 @@ export type IframeDocument = RawIframeDocument;
 
 export type MarkdownDocument = RawMarkdownDocument;
 
+export type HeaderDocument = RawHeaderDocument;
+
 export type SectionDocument = Omit<RawSectionDocument, "items"> & {
-    items: Array<TypeDocument | MethodDocument | SectionDocument | IframeDocument | MarkdownDocument>
+    items: Array<TypeDocument | MethodDocument | SectionDocument | IframeDocument | MarkdownDocument | MethodReferenceDocument>
 }
 
 export type InvokeInstructionDocument = RawInvokeInstructionDocument;
+export type MethodReferenceDocument = RawMethodReferenceDocument;
 
-export type ApiDocument = Omit<RawApiDocument, "sections" | "invokeInstruction" | "availableTypes"> & {
+export type ApiDocument =
+    Omit<RawApiDocument, "sections" | "invokeInstruction" | "availableTypes" | "availableMethods">
+    & {
     sections: SectionDocument[];
     invokeInstruction: InvokeInstructionDocument;
     availableTypes: TypeDocument[];
+    availableMethods: MethodDocument[];
 }

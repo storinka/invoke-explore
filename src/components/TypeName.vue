@@ -1,5 +1,6 @@
 <template>
     <div class="type-name"
+         v-hscroll
          @click="type.isArray || type.isUnion ? undefined : open()"
          :class="{ 'type-name--union': type.isUnion, 'type-name--typed-array': arrayItemType }"
     >
@@ -61,8 +62,6 @@ export default defineComponent({
     },
     methods: {
         open() {
-            console.log('emits');
-
             mitter.emit("modal:open", {
                 component: TypeModal,
                 props: {

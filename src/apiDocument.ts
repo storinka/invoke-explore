@@ -1,16 +1,20 @@
 import { ref } from "vue";
 import {
     ApiDocument,
+    HeaderDocument,
     IframeDocument,
     InvokeInstructionDocument,
     MarkdownDocument,
     MethodDocument,
+    MethodReferenceDocument,
     ParamDocument,
     RawApiDocument,
+    RawHeaderDocument,
     RawIframeDocument,
     RawInvokeInstructionDocument,
     RawMarkdownDocument,
     RawMethodDocument,
+    RawMethodReferenceDocument,
     RawParamDocument,
     RawSectionDocument,
     RawTypeDocument,
@@ -23,7 +27,7 @@ import mitt from 'mitt';
 
 export const mitter = mitt();
 
-export const activeDocument = ref<MethodDocument | TypeDocument | IframeDocument | MarkdownDocument | undefined>(undefined);
+export const activeDocument = ref<MethodDocument | TypeDocument | IframeDocument | MarkdownDocument | MethodReferenceDocument | undefined>(undefined);
 export const inputMode = ref(false);
 export const isInvoking = ref(false);
 export const invokeResult = ref<undefined | string | Object>(undefined);
@@ -53,6 +57,10 @@ function transformMarkdownDocument(rawMarkdownDocument: RawMarkdownDocument, raw
     return rawMarkdownDocument;
 }
 
+function transformHeaderDocument(rawHeaderDocument: RawHeaderDocument, rawApiDocument: RawApiDocument): HeaderDocument {
+    return rawHeaderDocument;
+}
+
 function transformTypeDocument(rawTypeDocument: RawTypeDocument, rawApiDocument: RawApiDocument): TypeDocument {
     if (transformedTypeDocuments[rawTypeDocument.uniqueTypeName]) {
         return transformedTypeDocuments[rawTypeDocument.uniqueTypeName];
@@ -79,6 +87,7 @@ function transformMethodDocument(rawMethodDocument: RawMethodDocument, rawApiDoc
         ...rawMethodDocument,
         resultType: transformTypeDocument(findTypeInRaw(rawMethodDocument.resultType as string, rawApiDocument) as RawTypeDocument, rawApiDocument),
         params: rawMethodDocument.params.map(rawParam => transformParamDocument(rawParam, rawApiDocument)),
+        headers: rawMethodDocument.headers.map(rawHeader => transformHeaderDocument(rawHeader, rawApiDocument)),
     };
 }
 
@@ -108,6 +117,10 @@ function transformInvokeInstructionDocument(rawInvokeInstructionDocument: RawInv
     return rawInvokeInstructionDocument;
 }
 
+function transformMethodReferenceDocument(rawMethodReferenceDocument: RawMethodReferenceDocument, rawApiDocument: RawApiDocument): MethodReferenceDocument {
+    return rawMethodReferenceDocument;
+}
+
 function transformSectionDocument(rawSectionDocument: RawSectionDocument, rawApiDocument: RawApiDocument): SectionDocument {
     return {
         ...rawSectionDocument,
@@ -123,6 +136,8 @@ function transformSectionDocument(rawSectionDocument: RawSectionDocument, rawApi
                     return transformTypeDocument(rawItem as RawTypeDocument, rawApiDocument);
                 case "MethodDocument":
                     return transformMethodDocument(rawItem as RawMethodDocument, rawApiDocument);
+                case "MethodReferenceDocument":
+                    return transformMethodReferenceDocument(rawItem as RawMethodReferenceDocument, rawApiDocument);
             }
         }),
     }
@@ -134,6 +149,7 @@ export function setRawApiDocument(rawApiDocument: RawApiDocument): void {
 
         sections: rawApiDocument.sections.map(section => transformSectionDocument(section, rawApiDocument)),
         invokeInstruction: transformInvokeInstructionDocument(rawApiDocument.invokeInstruction, rawApiDocument),
-        availableTypes: rawApiDocument.availableTypes.map(type => transformTypeDocument(type, rawApiDocument)),
+        availableTypes: rawApiDocument.availableTypes.map(rawType => transformTypeDocument(rawType, rawApiDocument)),
+        availableMethods: rawApiDocument.availableMethods.map(rawMethod => transformMethodDocument(rawMethod, rawApiDocument)),
     };
 }
