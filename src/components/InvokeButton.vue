@@ -1,0 +1,212 @@
+<template>
+    <button v-if="inputMode"
+            @click="cancel"
+            class="invoke-cancel-button"
+    >
+        cancel
+    </button>
+    <button @click="invoke"
+            :disabled="isInvoking && inputMode"
+            :class="{ 'invoke-button--active': inputMode }"
+            class="invoke-button"
+    >
+        Invoke
+    </button>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+import {
+    activeDocument,
+    apiDocument,
+    findTypeByName,
+    inputMode,
+    invokeResult,
+    invokingUploadProgress,
+    isInvoking
+} from '../apiDocument';
+import { ParamDocument, TypeDocument } from '../types';
+import axios from 'axios';
+
+function extractValue(path: string, type: TypeDocument, param?: ParamDocument) {
+    if (type.isUnion) {
+        const selectedTypeName = localStorage.getItem(`${path}[selectedType]`) || type.unionTypes[0].name;
+        type = findTypeByName(selectedTypeName)!;
+    }
+
+    if (type.isArray) {
+        const values = [];
+
+        let itemsCount: any = localStorage.getItem(`${path}:${type.name}[itemsCount]`);
+        itemsCount = itemsCount ? Number(itemsCount) : 0;
+
+        for (let i = 0; i < itemsCount; i++) {
+            const itemType = (type.validators.length ? type.validators : (param?.validators || []))
+                .find(v => v.name === "ArrayOf")
+                .data.itemType;
+
+            const value = extractValue(`${path}:${type.name}[${i}]`, itemType);
+
+            values.push(value);
+        }
+
+        return values;
+    }
+
+    if (type.isData) {
+        const params = {};
+
+        type.params.forEach(param => {
+            params[param.name] = extractValue(`${path}.${param.name}`, param.type, param);
+        });
+
+        return params;
+    }
+
+    return JSON.parse(localStorage.getItem(`${path}:${type.name}`));
+}
+
+const rootPathForMethod = method => `${method.name}`;
+
+const makeInvokeFn = () => {
+    const { protocol, host, port, path } = apiDocument.value!.invokeInstruction!;
+
+    return async (name: string, params: any, options: any): Promise<any> => {
+        const url = `${protocol}://${host}:${port}/${path ? path + '/' : ''}${name}`;
+
+        return await axios.post(url, params, {
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            onUploadProgress: options?.onUploadProgress as any,
+            onDownloadProgress: options?.onDownloadProgress as any,
+        }).then(response => {
+            return response.data.result;
+        });
+    };
+};
+
+export default defineComponent({
+    name: "InvokeButton",
+    computed: {
+        inputMode() {
+            return inputMode.value;
+        },
+        isInvoking() {
+            return isInvoking.value;
+        },
+    },
+    methods: {
+        invoke() {
+            if (this.isInvoking) {
+                if (!this.inputMode) {
+                    inputMode.value = true;
+                }
+
+                return;
+            }
+
+            if (!this.inputMode) {
+                inputMode.value = true;
+                return;
+            }
+
+            const invoke = makeInvokeFn();
+
+            const params = {};
+
+            if (activeDocument.value) {
+                activeDocument.value.params.forEach(param => {
+                    params[param.name] = extractValue(`${rootPathForMethod(activeDocument.value)}.${param.name}`, param.type, param);
+                });
+            }
+
+            invokeResult.value = undefined;
+            isInvoking.value = true;
+            invokingUploadProgress.value = {
+                loaded: 0,
+                total: 0,
+                percentage: 0
+            };
+
+            invoke(activeDocument.value.name, params, {
+                onUploadProgress: ({ loaded, total }) => {
+                    const percentage = loaded / total * 100;
+
+                    invokingUploadProgress.value = {
+                        loaded,
+                        total,
+                        percentage,
+                    };
+                },
+            }).then(result => invokeResult.value = result)
+                .catch(error => invokeResult.value = error)
+                .finally(() => {
+                    isInvoking.value = false;
+                });
+        },
+        cancel() {
+            inputMode.value = false;
+        },
+    },
+});
+</script>
+
+<style lang="scss">
+.invoke-button {
+  all: unset;
+
+  margin-left: auto;
+
+  height: 100%;
+
+  padding: 0 1rem;
+
+  background-color: var(--accentColor);
+  color: var(--bgColor);
+
+  cursor: pointer;
+
+  transition: all 125ms ease;
+
+  &:hover {
+    background-color: var(--accentColorHover);
+  }
+
+  &:active {
+    background-color: var(--accentColorActive);
+  }
+
+  &:disabled {
+    opacity: .6;
+    cursor: wait;
+  }
+}
+
+.invoke-button--active {
+  margin-left: 0;
+
+  background-color: var(--darkButtonColor);
+
+  &:hover {
+    background-color: var(--darkButtonColor);
+  }
+
+  &:active {
+    background-color: var(--darkButtonColor);
+  }
+}
+
+.invoke-cancel-button {
+  all: unset;
+
+  margin-left: auto;
+
+  height: 100%;
+
+  padding: 0 1rem;
+
+  cursor: pointer;
+}
+</style>

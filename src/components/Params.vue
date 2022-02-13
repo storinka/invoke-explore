@@ -1,62 +1,56 @@
 <template>
-    <div class="table"
+    <div class="params"
          :class="classes"
     >
         <Param :param="param"
                :path="path"
                :depth="depth"
-               :input="input"
+               :input="inputMode"
                v-for="param in params"
                :key="param.name"
         />
     </div>
 </template>
 
-<script lang="ts" setup>
-import { computed, defineProps, toRefs } from 'vue';
+<script lang="ts">
+import { defineComponent } from 'vue';
 import { ParamDocument } from '../types';
 import Param from './Param.vue';
 
-interface Props {
-    path?: string;
-    params?: ParamDocument[];
-    depth: number;
-    input?: boolean;
-}
+export default defineComponent({
+    name: "Params",
+    components: { Param },
+    props: {
+        path: String,
+        params: Object as () => ParamDocument[],
+        depth: Number,
+        inputMode: Boolean,
+    },
+    computed: {
+        classes() {
+            const classes = [];
 
-const props = defineProps<Props>();
-const { params, path, depth, input } = toRefs(props);
+            if (this.inputMode) {
+                classes.push('params--input-mode');
+            }
 
-const classes = computed(() => {
-    const classes = [];
+            classes.push(`params--depth-${this.depth}`);
 
-    if (input.value) {
-        classes.push('table--input-mode');
-    }
-
-    classes.push(`table--depth-${depth.value}`);
-
-    return classes;
+            return classes;
+        },
+    },
 });
 </script>
 
 <style lang="scss">
 $borderRadius: 6px;
 
-.table {
+.params {
   width: 100%;
 
   border-spacing: 0;
 
-  &.table--input-mode {
-    //.tr:not(:first-child) {
-    //  margin-top: 1rem;
-    //}
-    //
-    //& > .tr {
-    //  border-top: 1px solid var(--borderColor);
-    //}
-
+  &.params--input-mode {
     .td--type {
       padding: 0;
     }
@@ -90,19 +84,9 @@ $borderRadius: 6px;
       }
     }
 
-    .tr--data > .td--type > .table > .tr:first-child {
+    .tr--data > .td--type > .params > .tr:first-child {
       border-top: none !important;
     }
-
-    //&.table--data {
-    //  > .tr:last-child {
-    //    &:not(&.tr--data) {
-    //      > .td {
-    //        border-bottom: none !important;
-    //      }
-    //    }
-    //  }
-    //}
 
     .td__arrow {
       margin-left: 10px;
@@ -235,10 +219,10 @@ $borderRadius: 6px;
   }
 }
 
-.table--input-mode {
+.params--input-mode {
   .tr--data.tr--depth-0 {
     > .td--type {
-      > .table {
+      > .params {
         > .tr {
           border-left: 4px solid deepskyblue;
         }
@@ -248,7 +232,7 @@ $borderRadius: 6px;
 
   .tr--data.tr--depth-1 {
     > .td--type {
-      > .table {
+      > .params {
         > .tr {
           border-left: 4px solid gold;
         }

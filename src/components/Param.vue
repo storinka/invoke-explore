@@ -31,13 +31,13 @@
 
 <script lang="ts" setup>
 import { computed, ref, toRefs } from 'vue';
-import { ParamDocument } from '../types';
+import { RawParamDocument } from '../types';
 import Type from './Type.vue';
 import TypeInput from './TypeInput.vue';
 
 interface Props {
     path?: string;
-    param: ParamDocument;
+    param: RawParamDocument;
     depth: number;
     input?: boolean;
 }

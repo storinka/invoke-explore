@@ -80,7 +80,7 @@
     </div>
     <div class="enter-url" v-else>
         <form @submit.prevent="openSchemaFromInput" class="input-container">
-            <input placeholder="Schema url" type="text" v-model="schemaUrlInput">
+            <input placeholder="API document url" type="text" v-model="schemaUrlInput">
 
             <button v-if="schemaUrlInput" @click="openSchemaFromInput">
                 Open
@@ -94,8 +94,8 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import Type from './components/Type.vue';
 import Params from './components/Params.vue';
-import { MethodDocument } from './types';
-import { getTypeByName, schema, setSchema } from './schema';
+import { RawMethodDocument } from './types';
+import { getTypeByName, schema, setSchema } from './apiDocument';
 import VueJsonPretty from 'vue-json-pretty';
 import 'vue-json-pretty/lib/styles.css';
 import { useRoute, useRouter } from 'vue-router';
@@ -119,10 +119,10 @@ function openSchemaFromInput() {
 }
 
 const activeMethod = computed({
-    get(): MethodDocument | null {
+    get(): RawMethodDocument | null {
         return schema.value?.methods.find(m => m.name === route.query.method);
     },
-    set(method: MethodDocument | null) {
+    set(method: RawMethodDocument | null) {
         if (method) {
             router.replace({
                 query: {
@@ -175,8 +175,6 @@ function onInvokeClick() {
 }
 
 function extractValue(path, type, param) {
-    let selectedType = type.name;
-
     console.log(`extracting ${path}`);
 
     if (type.isUnion) {

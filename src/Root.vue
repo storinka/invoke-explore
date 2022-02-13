@@ -1,10 +1,18 @@
 <template>
     <RouterView/>
+    <ModalsContainer/>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts">
+import { defineComponent } from 'vue';
+import ModalsContainer from './ModalsContainer.vue';
+
+export default defineComponent({
+    name: "Root",
+    components: { ModalsContainer },
+});
 </script>
 
-<style scoped>
+<style lang="scss">
 
 </style>

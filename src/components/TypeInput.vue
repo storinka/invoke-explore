@@ -3,7 +3,7 @@
             v-if="type.isData"
             :depth="depth + 1"
             input
-            :class="[type.isData ? 'table--data' : undefined, type.isUnion ? 'table--union' : undefined, isArray ? 'table--array' : undefined]"
+            :class="[type.isData ? 'params--data' : undefined, type.isUnion ? 'params--union' : undefined, isArray ? 'params--array' : undefined]"
             :path="`${path}.${type.name}`"/>
     <div class="type-input-union" v-else-if="type.isUnion">
         <div class="type-input-union__types">
@@ -74,17 +74,17 @@
 </template>
 
 <script lang="ts" setup>
-import { TypeDocument, ValidatorDocument } from '../types';
+import { RawTypeDocument, RawValidatorDocument } from '../types';
 import { computed, defineProps, ref, toRefs } from 'vue';
 import Params from './Params.vue';
 
 type InputValue = string | number | boolean | null | File;
 
 interface Props {
-    type: TypeDocument;
+    type: RawTypeDocument;
     path?: string;
     depth: number;
-    validators: ValidatorDocument[];
+    validators: RawValidatorDocument[];
 }
 
 const props = defineProps<Props>();
@@ -135,7 +135,7 @@ const value = computed({
 const isArray = computed(() => type.value.name === 'array' || type.value.name.startsWith('array<'));
 
 const selectedType = computed({
-    get(): TypeDocument {
+    get(): RawTypeDocument {
         update.value;
 
         const localTypeName = localStorage.getItem(`${path.value}[selectedType]`);
@@ -150,7 +150,7 @@ const selectedType = computed({
 
         return type.value.unionTypes[0];
     },
-    set(type: TypeDocument) {
+    set(type: RawTypeDocument) {
         localStorage.setItem(`${path.value}[selectedType]`, type.name);
         update.value++;
     }
@@ -219,174 +219,174 @@ const removeArrayItem = (index: number) => {
 }
 </script>
 
-<style scoped lang="scss">
-.type-input {
-  input {
-    color: green;
-    background-color: transparent;
+<!--<style scoped lang="scss">-->
+<!--.type-input {-->
+<!--  input {-->
+<!--    color: green;-->
+<!--    background-color: transparent;-->
 
-    outline: none;
+<!--    outline: none;-->
 
-    &.null {
-      &::placeholder {
-        color: yellowgreen;
-      }
-    }
-  }
+<!--    &.null {-->
+<!--      &::placeholder {-->
+<!--        color: yellowgreen;-->
+<!--      }-->
+<!--    }-->
+<!--  }-->
 
-  label {
-    display: none;
-  }
-}
+<!--  label {-->
+<!--    display: none;-->
+<!--  }-->
+<!--}-->
 
-.type-input--checkbox {
-  input {
-    display: none;
-  }
-}
+<!--.type-input&#45;&#45;checkbox {-->
+<!--  input {-->
+<!--    display: none;-->
+<!--  }-->
+<!--}-->
 
-.type-input-bool {
-  width: 100%;
-  height: 100%;
+<!--.type-input-bool {-->
+<!--  width: 100%;-->
+<!--  height: 100%;-->
 
-  padding: .5rem 1rem;
+<!--  padding: .5rem 1rem;-->
 
-  display: flex;
-  align-items: center;
+<!--  display: flex;-->
+<!--  align-items: center;-->
 
-  button {
-    border: none;
+<!--  button {-->
+<!--    border: none;-->
 
-    background-color: var(--mutedColor);
-    color: var(--bgColor);
+<!--    background-color: var(&#45;&#45;mutedColor);-->
+<!--    color: var(&#45;&#45;bgColor);-->
 
-    cursor: pointer;
+<!--    cursor: pointer;-->
 
-    transition: all 250ms ease;
-  }
+<!--    transition: all 250ms ease;-->
+<!--  }-->
 
-  .type-input-bool__false {
-    border-radius: 4px 0 0 4px;
-  }
+<!--  .type-input-bool__false {-->
+<!--    border-radius: 4px 0 0 4px;-->
+<!--  }-->
 
-  .type-input-bool__true {
-    border-radius: 0 4px 4px 0;
-  }
+<!--  .type-input-bool__true {-->
+<!--    border-radius: 0 4px 4px 0;-->
+<!--  }-->
 
-  &.type-input-bool--true {
-    .type-input-bool__true {
-      background-color: limegreen;
-    }
-  }
+<!--  &.type-input-bool&#45;&#45;true {-->
+<!--    .type-input-bool__true {-->
+<!--      background-color: limegreen;-->
+<!--    }-->
+<!--  }-->
 
-  &.type-input-bool--false {
-    .type-input-bool__false {
-      background-color: indianred;
-    }
-  }
-}
+<!--  &.type-input-bool&#45;&#45;false {-->
+<!--    .type-input-bool__false {-->
+<!--      background-color: indianred;-->
+<!--    }-->
+<!--  }-->
+<!--}-->
 
-.type-input-union {
-  display: flex;
-  flex-direction: column;
-}
+<!--.type-input-union {-->
+<!--  display: flex;-->
+<!--  flex-direction: column;-->
+<!--}-->
 
-.type-input-union__types {
-  display: flex;
-}
+<!--.type-input-union__types {-->
+<!--  display: flex;-->
+<!--}-->
 
-.type-input-union__type {
-  flex: 1 1 100%;
+<!--.type-input-union__type {-->
+<!--  flex: 1 1 100%;-->
 
-  padding: .1rem .5rem;
+<!--  padding: .1rem .5rem;-->
 
-  white-space: nowrap;
+<!--  white-space: nowrap;-->
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: nowrap;
+<!--  display: flex;-->
+<!--  align-items: center;-->
+<!--  justify-content: center;-->
+<!--  flex-wrap: nowrap;-->
 
-  border: none;
-  border-bottom: 1px solid var(--borderColor);
+<!--  border: none;-->
+<!--  border-bottom: 1px solid var(&#45;&#45;borderColor);-->
 
-  transition: all 250ms ease;
+<!--  transition: all 250ms ease;-->
 
-  cursor: pointer;
+<!--  cursor: pointer;-->
 
-  background-color: var(--bgColor);
-  color: var(--textColor);
+<!--  background-color: var(&#45;&#45;bgColor);-->
+<!--  color: var(&#45;&#45;textColor);-->
 
-  &:not(:last-child) {
-    border-right: 1px solid var(--borderColor);
-  }
-}
+<!--  &:not(:last-child) {-->
+<!--    border-right: 1px solid var(&#45;&#45;borderColor);-->
+<!--  }-->
+<!--}-->
 
-.type-input-enum {
-  .type-input-union__type {
-    padding: .2rem .5rem;
-  }
-}
+<!--.type-input-enum {-->
+<!--  .type-input-union__type {-->
+<!--    padding: .2rem .5rem;-->
+<!--  }-->
+<!--}-->
 
-.type-input-union--selected {
-  background-color: var(--borderColor);
-  cursor: default;
-}
+<!--.type-input-union&#45;&#45;selected {-->
+<!--  background-color: var(&#45;&#45;borderColor);-->
+<!--  cursor: default;-->
+<!--}-->
 
-.type-input-array__item {
-  display: flex;
-  align-items: center;
+<!--.type-input-array__item {-->
+<!--  display: flex;-->
+<!--  align-items: center;-->
 
-  border-bottom: 1px solid var(--borderColor);
+<!--  border-bottom: 1px solid var(&#45;&#45;borderColor);-->
 
-  .type-input-array__item-remove {
-    all: unset;
+<!--  .type-input-array__item-remove {-->
+<!--    all: unset;-->
 
-    width: 20px;
-    height: 100%;
+<!--    width: 20px;-->
+<!--    height: 100%;-->
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+<!--    display: flex;-->
+<!--    align-items: center;-->
+<!--    justify-content: center;-->
 
-    background-color: red;
-    color: white;
-  }
+<!--    background-color: red;-->
+<!--    color: white;-->
+<!--  }-->
 
-  .type-input-array__item-index {
-    width: 20px;
+<!--  .type-input-array__item-index {-->
+<!--    width: 20px;-->
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+<!--    display: flex;-->
+<!--    align-items: center;-->
+<!--    justify-content: center;-->
+<!--  }-->
 
-  > .type-input-union {
-    width: 100%;
-  }
+<!--  > .type-input-union {-->
+<!--    width: 100%;-->
+<!--  }-->
 
-  > .type-input,
-  > .type-input-union {
-    border-left: 1px solid var(--borderColor);
-    border-right: 1px solid var(--borderColor);
-  }
-}
+<!--  > .type-input,-->
+<!--  > .type-input-union {-->
+<!--    border-left: 1px solid var(&#45;&#45;borderColor);-->
+<!--    border-right: 1px solid var(&#45;&#45;borderColor);-->
+<!--  }-->
+<!--}-->
 
-.type-input-array__add-button {
-  all: unset;
+<!--.type-input-array__add-button {-->
+<!--  all: unset;-->
 
-  width: 100%;
+<!--  width: 100%;-->
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+<!--  display: flex;-->
+<!--  align-items: center;-->
+<!--  justify-content: center;-->
 
-  cursor: pointer;
+<!--  cursor: pointer;-->
 
-  transition: all 250ms ease;
+<!--  transition: all 250ms ease;-->
 
-  &:hover {
-    background-color: var(--borderColor);
-  }
-}
-</style>
+<!--  &:hover {-->
+<!--    background-color: var(&#45;&#45;borderColor);-->
+<!--  }-->
+<!--}-->
+<!--</style>-->

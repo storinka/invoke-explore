@@ -19,7 +19,7 @@
             {{ type.name }}
         </template>
 
-        <Modal v-model="modal">
+        <Modal v-model="modal" v-if="modal">
             <header class="modal__header">
                 <h2 class="modal__title">
                     {{ type.name }}
@@ -52,12 +52,12 @@
 import { computed, defineProps, ref, toRefs } from 'vue';
 import Modal from './Modal.vue';
 import Params from './Params.vue';
-import { TypeDocument, ValidatorDocument } from '../types';
+import { RawTypeDocument, RawValidatorDocument } from '../types';
 
 interface Props {
-    type: TypeDocument;
+    type: RawTypeDocument;
     noOpen?: boolean;
-    validators: ValidatorDocument[];
+    validators: RawValidatorDocument[];
 }
 
 const props = defineProps<Props>();

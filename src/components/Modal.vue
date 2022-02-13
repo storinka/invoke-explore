@@ -1,12 +1,17 @@
 <template>
     <Teleport to="body">
-        <VueFinalModal v-bind="$attrs">
+        <VueFinalModal esc-to-close v-bind="$attrs">
             <slot/>
         </VueFinalModal>
     </Teleport>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+    name: "Modal",
+});
 </script>
 
 <style scoped>
