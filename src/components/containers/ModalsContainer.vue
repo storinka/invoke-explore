@@ -9,7 +9,7 @@
 
 <script lang="ts">
 import { defineComponent, markRaw } from 'vue';
-import { mitter } from './apiDocument';
+import { mitter } from '../../apiDocument';
 
 export default defineComponent({
     name: "ModalsContainer",

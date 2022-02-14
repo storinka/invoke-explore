@@ -1,12 +1,25 @@
 <template>
-    <div class="api-document" :class="{ 'app-document--three-cols': isMethodActive }" v-if="apiDocument">
+    <div class="loading" v-if="isLoading">
+        <div class="text">
+            LOADING...
+        </div>
+        <div class="url">
+            {{ documentUrl }}
+        </div>
+    </div>
+    <pre class="error" v-else-if="error">
+        {{ JSON.stringify(error) }}
+    </pre>
+    <div class="api-document" :class="{ 'app-document--three-cols': isMethodActive }" v-else-if="apiDocument">
         <div class="api-document__sections">
             <div class="app-header">
-                <div class="app-header__icon" v-if="apiDocument.iconUrl">
-                    <img src="https://business.storinka.menu/_nuxt/img/logo.b45e76c.svg" alt="Icon">
+                <div class="app-header__icon" v-if="apiDocument.iconUrl?.length">
+                    <img :src="apiDocument.iconUrl" alt="Icon">
                 </div>
 
-                {{ apiDocument.name }}
+                <template v-if="apiDocument.name?.length && !apiDocument.iconOnly">
+                    {{ apiDocument.name }}
+                </template>
 
                 <button @click="openSettings" class="app-header__settings-button">
                     ⚙
@@ -131,24 +144,29 @@ import {
     isInvoking,
     mitter,
     setRawApiDocument
-} from './apiDocument';
-import SectionItem from './components/SectionItem.vue';
-import TypeName from './components/TypeName.vue';
-import NewParams from './components/NewParams.vue';
-import Section from './components/Section.vue';
-import InvokeButton from './components/InvokeButton.vue';
+} from '../apiDocument';
+import SectionItem from '../components/SectionItem.vue';
+import TypeName from '../components/TypeName.vue';
+import NewParams from '../components/NewParams.vue';
+import Section from '../components/Section.vue';
+import InvokeButton from '../components/InvokeButton.vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import VueJsonPretty from 'vue-json-pretty';
-import Headers from './components/Headers.vue';
-import SettingsModal from './components/SettingsModal.vue';
-
-const API_DOCUMENT_URL = "http://localhost:8081/getApiDocument";
+import Headers from '../components/Headers.vue';
+import SettingsModal from '../components/SettingsModal.vue';
 
 export default defineComponent({
     name: "ApiDocument",
     components: { Headers, InvokeButton, Section, NewParams, TypeName, SectionItem, VueJsonPretty },
+    data: () => ({
+        isLoading: false,
+        error: undefined as any,
+    }),
     computed: {
+        documentUrl(): string {
+            return this.$route.query.url as string;
+        },
         apiDocument() {
             return apiDocument.value;
         },
@@ -199,12 +217,12 @@ export default defineComponent({
         },
     },
     mounted() {
-        fetch(API_DOCUMENT_URL)
-            .then(r => r.json())
-            .then(data => setRawApiDocument(data.result))
-            .then(() => {
-                this.activeItem = this.apiDocument?.sections[0]?.items[0];
-            });
+        this.refresh();
+    },
+    beforeUnmount() {
+        apiDocument.value = undefined;
+        activeDocument.value = undefined;
+        this.error = undefined;
     },
     methods: {
         openSettings() {
@@ -213,12 +231,46 @@ export default defineComponent({
                 props: {},
             });
         },
+        refresh() {
+            const url = this.documentUrl;
+
+            this.isLoading = true;
+
+            fetch(this.documentUrl)
+                .then(async r => {
+                    if (!r.ok) {
+                        throw await r.json();
+                    } else {
+                        return r;
+                    }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (url === this.documentUrl) {
+                        setRawApiDocument(data.result);
+                    }
+                })
+                .then(() => {
+                    this.activeItem = this.apiDocument?.sections[0]?.items[0];
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                })
+                .catch(error => {
+                    this.error = error;
+                })
+        },
+    },
+    watch: {
+        documentUrl() {
+            this.refresh();
+        },
     },
 });
 </script>
 
 <style lang="scss">
-@import "./assets/styles";
+@import "../assets/styles";
 
 html, body {
   margin: 0;
@@ -348,5 +400,42 @@ html, body {
   width: 100%;
 
   border-bottom: 1px solid var(--borderColor);
+}
+
+.loading {
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: bold;
+  font-size: 1rem;
+
+  .url {
+    margin-top: 1rem;
+
+    font-weight: 500;
+    color: var(--mutedColor);
+  }
+}
+
+.error {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: bold;
+  font-size: 1rem;
+
+  color: red;
 }
 </style>

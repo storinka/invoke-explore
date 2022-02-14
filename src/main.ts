@@ -1,10 +1,12 @@
 import { createApp, Directive } from 'vue'
 import SDropdown from '@storinka/dropdown'
 import vfmPlugin from 'vue-final-modal'
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import Root from './Root.vue'
-import ApiDocument from './ApiDocument.vue';
-import { rippleDirective } from './directives/ripple.js';
+import router from './router';
+
+if (!window.INVOKE_API_DOCUMENT_URL) {
+    window.INVOKE_API_DOCUMENT_URL = "http://localhost:8081/getApiDocument";
+}
 
 function scrollHorizontally(e) {
     e = window.event || e;
@@ -37,18 +39,7 @@ const app = createApp(Root)
 app.use(SDropdown)
 app.use(vfmPlugin)
 
-const router = createRouter({
-    history: createWebHistory('/invoke-explore'),
-    routes: [
-        {
-            path: '',
-            component: ApiDocument,
-        } as RouteRecordRaw
-    ]
-} as any)
-
 app.use(router)
-app.directive('ripple', rippleDirective)
 app.directive('hscroll', HScroll);
 
 app.mount('#app')

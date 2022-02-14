@@ -98,6 +98,7 @@ export interface RawApiDocument {
     name: string;
     summary?: string;
     iconUrl?: string;
+    iconOnly: boolean;
     sections: RawSectionDocument[];
     invokeInstruction: RawInvokeInstructionDocument;
     availableTypes: RawTypeDocument[];
