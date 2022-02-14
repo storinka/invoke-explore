@@ -8,7 +8,7 @@
         </div>
     </div>
     <pre class="error" v-else-if="error">
-        {{ JSON.stringify(error) }}
+        {{ error?.error ?? error }}
     </pre>
     <div class="api-document" :class="{ 'app-document--three-cols': isMethodActive }" v-else-if="apiDocument">
         <div class="api-document__sections">
@@ -239,7 +239,11 @@ export default defineComponent({
             fetch(this.documentUrl)
                 .then(async r => {
                     if (!r.ok) {
-                        throw await r.json();
+                        try {
+                            throw await r.json();
+                        } catch (e) {
+                            throw new Error('Failed to fetch.')
+                        }
                     } else {
                         return r;
                     }

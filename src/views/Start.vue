@@ -21,7 +21,7 @@ export default defineComponent({
     }),
     computed: {
         isValidUrl(): boolean {
-            return !!this.documentUrl.length;
+            return this.documentUrl.startsWith('http://') || this.documentUrl.startsWith('https://');
         },
     },
     methods: {
