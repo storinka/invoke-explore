@@ -3,7 +3,7 @@ import Start from '../views/Start.vue';
 import ApiDocument from '../views/ApiDocument.vue';
 
 const router = createRouter({
-    history: createWebHistory('/invoke-explore'),
+    history: createWebHistory('/'),
     routes: [
         {
             name: 'Start',
