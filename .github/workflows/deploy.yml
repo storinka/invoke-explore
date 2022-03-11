@@ -43,6 +43,10 @@ jobs:
       - name: Build Vite site
         run: yarn build
 
+      # index.html as 404.html page
+      - name: index.html fallback
+        run: ln -s index.html dist/404.html
+
       # please check out the docs of the workflow for more details
       # @see https://github.com/crazy-max/ghaction-github-pages
       - name: Deploy to GitHub Pages
