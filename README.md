@@ -1,7 +1,5 @@
 # Invoke Explore
 
-**[Open at storinka.github.io/invoke-explore](https://storinka.github.io/invoke-explore/)**
-
 API Document viewer written in Vue 3.
 
 ![screenshot](screenshot.png)
