@@ -163,7 +163,7 @@ export default defineComponent({
   },
   computed: {
     documentUrl(): string {
-      return this.$route.query.url as string;
+      return window.__storinka_ix_api_document_url__ || this.$route.query.url as string;
     },
     apiDocument() {
       return apiDocument.value;

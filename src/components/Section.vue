@@ -82,7 +82,10 @@ export default defineComponent({
 
         return true;
       });
-    }
+    },
+    apiDocument() {
+      return apiDocument.value;
+    },
   },
   mounted() {
     this.resetHeight();
@@ -134,6 +137,21 @@ export default defineComponent({
         this.resetHeight();
       });
     },
+    "$route.query.item"(queryItem) {
+      if (queryItem) {
+        const [itemName, itemType] = String(queryItem).split(':');
+
+        this.mappedItems?.forEach((item) => {
+          if (item) {
+            if (item['@type'] === itemType && item.name === itemName) {
+              this.setActiveItem(item);
+            }
+          }
+        });
+      } else {
+        this.activeItem = this.apiDocument?.sections[0]?.items[0];
+      }
+    }
   },
 });
 </script>

@@ -4,7 +4,13 @@ import ApiDocument from '../views/ApiDocument.vue';
 
 const router = createRouter({
     history: createWebHistory(window.__storinka_ix_base_path__),
-    routes: [
+    routes: window.__storinka_ix_api_document_url__ ? [
+        {
+            name: 'ApiDocument',
+            path: '/',
+            component: ApiDocument,
+        },
+    ] : [
         {
             name: 'Start',
             path: '',
