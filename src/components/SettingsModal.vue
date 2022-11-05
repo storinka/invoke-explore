@@ -1,39 +1,61 @@
 <template>
-    <Modal v-model="isOpen" @closed="$emit('closed', $event)">
-        <header class="modal__header">
-            <h2 class="modal__title">
-                Settings
-            </h2>
+  <Modal v-model="isOpen" @closed="$emit('closed', $event)">
+    <header class="modal__header">
+      <h2 class="modal__title">
+        Settings
+      </h2>
 
-            <button @click="isOpen = false" class="modal__close">
-                ×
-            </button>
-        </header>
+      <button @click="isOpen = false" class="modal__close">
+        ×
+      </button>
+    </header>
 
-        <main class="modal__body">
-            <button class="btn" @click="clear">Clear storage</button>
-        </main>
-    </Modal>
+    <main class="modal__body">
+      <div class="modal__body-section">
+        <div class="api-document-section-block" v-if="true">
+          <div class="api-document-section-block__name">
+            Global Headers
+          </div>
+          <Headers class="api-document-section-block__params"
+                   :path="apiDocument.name"
+                   :input-mode="true"
+                   glob
+          />
+        </div>
+      </div>
+
+      <button class="btn" @click="clear">Clear storage</button>
+    </main>
+  </Modal>
 </template>
 
 <script lang="ts">
 import Modal from "./Modal.vue";
 import { defineComponent } from 'vue';
+import Headers from "./Headers.vue";
+import { apiDocument } from "../apiDocument";
 
 export default defineComponent({
-    name: "SettingsModal",
-    components: { Modal },
-    data() {
-        return {
-            isOpen: true,
-        };
+  name: "SettingsModal",
+  components: { Headers, Modal },
+  data() {
+    return {
+      isOpen: true,
+    };
+  },
+  computed: {
+    apiDocument() {
+      return apiDocument.value;
     },
-    methods: {
-        clear() {
-            localStorage.clear();
-            window.location.reload();
-        },
+  },
+  methods: {
+    clear() {
+      if (confirm('Are you sure?')) {
+        localStorage.clear();
+        window.location.reload();
+      }
     },
+  },
 });
 </script>
 

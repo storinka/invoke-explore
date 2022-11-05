@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import {
     ApiDocument,
     HeaderDocument,
@@ -36,6 +36,10 @@ export const invokingUploadProgress = ref<{ loaded: number; total: number; perce
     total: 0,
     percentage: 0
 });
+
+export const searchQuery = ref('');
+
+export const isSearching = computed(() => !!searchQuery.value.trim());
 
 export const apiDocument = ref<undefined | ApiDocument>(undefined);
 

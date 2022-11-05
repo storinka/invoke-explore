@@ -4,8 +4,8 @@ import vfmPlugin from 'vue-final-modal'
 import Root from './Root.vue'
 import router from './router';
 
-if (!window.INVOKE_API_DOCUMENT_URL) {
-    window.INVOKE_API_DOCUMENT_URL = "http://localhost:8081/getApiDocument";
+if (!window.__storinka_ix_base_path__) {
+    window.__storinka_ix_base_path__ = "/";
 }
 
 function scrollHorizontally(e) {

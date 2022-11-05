@@ -3,7 +3,7 @@ import Start from '../views/Start.vue';
 import ApiDocument from '../views/ApiDocument.vue';
 
 const router = createRouter({
-    history: createWebHistory('/'),
+    history: createWebHistory(window.__storinka_ix_base_path__),
     routes: [
         {
             name: 'Start',

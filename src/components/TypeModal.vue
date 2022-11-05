@@ -151,4 +151,8 @@ export default defineComponent({
   margin-top: 12px;
 }
 
+.modal__body-section {
+  border: 1px solid var(--borderColor);
+  border-radius: 6px;
+}
 </style>

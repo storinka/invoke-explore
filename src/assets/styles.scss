@@ -201,13 +201,34 @@ body {
   border-bottom: 1px solid var(--borderColor);
 }
 
+.app-search {
+  width: 100%;
+  padding: 0;
+  
+  border-bottom: 1px solid var(--borderColor);
+
+  input {
+    height: 50px;
+    width: 100%;
+
+    padding: 0 1rem;
+
+    border: none;
+    border-radius: 0;
+
+    outline: none;
+
+    font-size: 1rem;
+  }
+}
+
 .app-header__icon {
   height: 1.4em;
 
   img {
     padding-right: .5ch;
 
-    width: 100%;
+    width: auto;
     height: 100%;
   }
 }
