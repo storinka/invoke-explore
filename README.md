@@ -4,6 +4,10 @@ API Document viewer written in Vue 3.
 
 ![screenshot](screenshot.png)
 
+## Examples
+
+- [Storinka Public API](https://explore.invoke.red/d?url=https://api.storinka.menu/invoke/v4/getApiDocument)
+
 ## Features
 
 - Supports custom name and icon in header
